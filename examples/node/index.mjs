@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Sample RESTful route
-app.get('/api/hello', async (req, res) => {
+app.get('/potoken', async (req, res) => {
   const result = await getPoToken()
   res.json(result);
 });
