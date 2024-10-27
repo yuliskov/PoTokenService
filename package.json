@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "express": "^4.21.1",
-    "jsdom": "^25.0.1"
+    "jsdom": "^25.0.1",
+    "youtubei": "^1.6.4"
   }
 }
