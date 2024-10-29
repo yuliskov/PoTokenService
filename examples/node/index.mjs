@@ -7,14 +7,21 @@ import express from 'express';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+let isProcessing = false;
 
 // Middleware to parse JSON requests
 app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
+  if (isProcessing) return;
+  
+  isProcessing = true;
+  
   const result = await getPoToken(req.query.visitorData);
   res.json(result);
+
+  isProcessing = false;
 });
 
 app.get('/health-check', (req, res) => {
