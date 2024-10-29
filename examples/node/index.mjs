@@ -13,12 +13,7 @@ app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
-  const result = await getPoToken();
-  res.json(result);
-});
-
-app.get('/:visitorData', async (req, res) => {
-  const result = await getPoToken(req.params.visitorData);
+  const result = await getPoToken(req.query.visitorData);
   res.json(result);
 });
 
