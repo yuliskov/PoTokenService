@@ -13,7 +13,12 @@ app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
-  const result = await getPoToken()
+  const result = await getPoToken();
+  res.json(result);
+});
+
+app.get('/:visitorData', async (req, res) => {
+  const result = await getPoToken(req.params.visitorData);
   res.json(result);
 });
 
@@ -26,11 +31,13 @@ app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-async function getPoToken() {
-  let innertube = await Innertube.create({retrieve_player: false});
+async function getPoToken(visitorData) {
+  if (visitorData === undefined) {
+    let innertube = await Innertube.create({retrieve_player: false});
+    visitorData = innertube.session.context.client.visitorData;
+  }
 
   const requestKey = 'O43z0dpjhgX20SCx4KAo';
-  const visitorData = innertube.session.context.client.visitorData;
 
   const dom = new JSDOM();
 
