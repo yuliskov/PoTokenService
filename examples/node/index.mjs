@@ -4,30 +4,35 @@ import { Innertube, UniversalCache } from 'youtubei.js';
 // import { Innertube, UniversalCache } from 'youtubei.js/web';
 import { BG } from '../../dist/index.js';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-let isProcessing = false;
+
+// Apply a general rate limit to all requests (1 request per 15 seconds)
+const generalLimiter = rateLimit({
+  windowMs: 5 * 1_000, // 15 seconds
+  max: 1, // 1 request per windowMs
+  keyGenerator: () => 'global', // Apply limit across all IPs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true, // Include rate limit info in the headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply the rate limiter to all routes
+app.use(generalLimiter);
 
 // Middleware to parse JSON requests
 app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
-  if (isProcessing) {
-    return res.status(429).json({ error: 'Request is being processed. Please try again later.' });
-  }
-  
-  isProcessing = true;
-
   try {
     const result = await getPoToken(req.query.visitorData);
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'An error occurred while processing your request.' });
-  } finally {
-    isProcessing = false;
+    res.status(500).json({ error: error.message });
   }
 });
 

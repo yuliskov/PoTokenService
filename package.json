@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
     "jsdom": "^24.1.1",
     "youtubei.js": "^10.5.0"
   }
