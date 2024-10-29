@@ -14,14 +14,21 @@ app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
-  if (isProcessing) return;
+  if (isProcessing) {
+    return res.status(429).json({ error: 'Request is being processed. Please try again later.' });
+  }
   
   isProcessing = true;
-  
-  const result = await getPoToken(req.query.visitorData);
-  res.json(result);
 
-  isProcessing = false;
+  try {
+    const result = await getPoToken(req.query.visitorData);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred while processing your request.' });
+  } finally {
+    isProcessing = false;
+  }
 });
 
 app.get('/health-check', (req, res) => {
