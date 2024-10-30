@@ -1,12 +1,10 @@
 import { JSDOM } from 'jsdom';
-import { Innertube, UniversalCache } from 'youtubei.js';
-// Bun:
-// import { Innertube, UniversalCache } from 'youtubei.js/web';
+import { Innertube } from 'youtubei.js';
 import { BG } from '../../dist/index.js';
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+//import rateLimit from 'express-rate-limit';
 
-// BEGIN PoToken init
+// BEGIN PoToken
 
 const requestKey = 'O43z0dpjhgX20SCx4KAo';
 
@@ -35,23 +33,47 @@ if (interpreterJavascript) {
   new Function(interpreterJavascript)();
 } else throw new Error('Could not load VM');
 
-/// END PoToken init
+async function getPoToken(visitorData) {
+  if (visitorData === undefined) {
+    let innertube = await Innertube.create({retrieve_player: false});
+    visitorData = innertube.session.context.client.visitorData;
+  }
+
+  const poTokenResult = await BG.PoToken.generate({
+    program: bgChallenge.program,
+    globalName: bgChallenge.globalName,
+    bgConfig
+  });
+
+  //const placeholderPoToken = BG.PoToken.generatePlaceholder(visitorData);
+
+  return {
+    visitorData,
+    //placeholderPoToken, // not used
+    poToken: poTokenResult.poToken,
+    mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
+  }
+}
+
+/// END PoToken
+
+/// BEGIN server
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
-const generalLimiter = rateLimit({
-  windowMs: 1 * 1_000, // 5 seconds
-  max: 10, // 1 request per windowMs
-  keyGenerator: () => 'global', // Apply limit across all IPs
-  message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: true, // Include rate limit info in the headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
+// const generalLimiter = rateLimit({
+//   windowMs: 1 * 1_000, // 5 seconds
+//   max: 10, // 1 request per windowMs
+//   keyGenerator: () => 'global', // Apply limit across all IPs
+//   message: { error: 'Too many requests, please try again later.' },
+//   standardHeaders: true, // Include rate limit info in the headers
+//   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+// });
 
 // Apply the rate limiter to all routes
-app.use(generalLimiter);
+//app.use(generalLimiter);
 
 // Middleware to parse JSON requests
 app.use(express.json());
@@ -76,24 +98,4 @@ app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-async function getPoToken(visitorData) {
-  if (visitorData === undefined) {
-    let innertube = await Innertube.create({retrieve_player: false});
-    visitorData = innertube.session.context.client.visitorData;
-  }
-
-  const poTokenResult = await BG.PoToken.generate({
-    program: bgChallenge.program,
-    globalName: bgChallenge.globalName,
-    bgConfig
-  });
-
-  //const placeholderPoToken = BG.PoToken.generatePlaceholder(visitorData);
-
-  return {
-    visitorData,
-    //placeholderPoToken, // not used
-    poToken: poTokenResult.poToken,
-    mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
-  }
-}
+/// END server
