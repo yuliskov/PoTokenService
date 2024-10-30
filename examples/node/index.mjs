@@ -6,6 +6,37 @@ import { BG } from '../../dist/index.js';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 
+// BEGIN PoToken init
+
+const requestKey = 'O43z0dpjhgX20SCx4KAo';
+
+const dom = new JSDOM();
+
+Object.assign(globalThis, {
+  window: dom.window,
+  document: dom.window.document
+});
+
+const bgConfig = {
+  fetch: (url, options) => fetch(url, options),
+  globalObj: globalThis,
+  identifier: null, // visitorData (not used)
+  requestKey,
+};
+
+const bgChallenge = await BG.Challenge.create(bgConfig);
+
+if (!bgChallenge)
+  throw new Error('Could not get challenge');
+
+const interpreterJavascript = bgChallenge.interpreterJavascript.privateDoNotAccessOrElseSafeScriptWrappedValue;
+
+if (interpreterJavascript) {
+  new Function(interpreterJavascript)();
+} else throw new Error('Could not load VM');
+
+/// END PoToken init
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -44,37 +75,6 @@ app.get('/health-check', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-// BEGIN PoToken init
-
-const requestKey = 'O43z0dpjhgX20SCx4KAo';
-
-const dom = new JSDOM();
-
-Object.assign(globalThis, {
-  window: dom.window,
-  document: dom.window.document
-});
-
-const bgConfig = {
-  fetch: (url, options) => fetch(url, options),
-  globalObj: globalThis,
-  identifier: null, // visitorData (not used)
-  requestKey,
-};
-
-const bgChallenge = await BG.Challenge.create(bgConfig);
-
-if (!bgChallenge)
-  throw new Error('Could not get challenge');
-
-const interpreterJavascript = bgChallenge.interpreterJavascript.privateDoNotAccessOrElseSafeScriptWrappedValue;
-
-if (interpreterJavascript) {
-  new Function(interpreterJavascript)();
-} else throw new Error('Could not load VM');
-
-/// END PoToken init
 
 async function getPoToken(visitorData) {
   if (visitorData === undefined) {
