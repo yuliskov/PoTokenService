@@ -1,0 +1,12 @@
+# Exported from Render on 2024-10-30T01:23:54Z
+services:
+- type: web
+  name: PoTokenService
+  runtime: node
+  repo: https://github.com/yuliskov/PoTokenService
+  plan: free
+  region: frankfurt
+  buildCommand: npm install
+  startCommand: node ./examples/node/index.mjs
+  autoDeploy: false
+version: "1"
