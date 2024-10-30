@@ -20,7 +20,7 @@ Object.assign(globalThis, {
 const bgConfig = {
   fetch: (url, options) => fetch(url, options),
   globalObj: globalThis,
-  identifier: null, // visitorData (not used)
+  //identifier: visitorData, // not used
   requestKey,
 };
 
@@ -42,7 +42,7 @@ const PORT = process.env.PORT || 3000;
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
 const generalLimiter = rateLimit({
-  windowMs: 3 * 1_000, // 5 seconds
+  windowMs: 2 * 1_000, // 5 seconds
   max: 10, // 1 request per windowMs
   keyGenerator: () => 'global', // Apply limit across all IPs
   message: { error: 'Too many requests, please try again later.' },
@@ -88,11 +88,11 @@ async function getPoToken(visitorData) {
     bgConfig
   });
 
-  const placeholderPoToken = BG.PoToken.generatePlaceholder(visitorData);
+  //const placeholderPoToken = BG.PoToken.generatePlaceholder(visitorData);
 
   return {
     visitorData,
-    placeholderPoToken,
+    //placeholderPoToken, // not used
     poToken: poTokenResult.poToken,
     mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
   }
