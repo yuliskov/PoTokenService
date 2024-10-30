@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 3000;
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
 const generalLimiter = rateLimit({
-  windowMs: 3 * 1_000, // 5 seconds
-  max: 10, // 1 request per windowMs
+  windowMs: 5 * 1_000, // 5 seconds
+  max: 3, // 1 request per windowMs
   keyGenerator: () => 'global', // Apply limit across all IPs
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true, // Include rate limit info in the headers
@@ -45,42 +45,38 @@ app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-// BEGIN PoToken init
-
-const requestKey = 'O43z0dpjhgX20SCx4KAo';
-
-const dom = new JSDOM();
-
-Object.assign(globalThis, {
-  window: dom.window,
-  document: dom.window.document
-});
-
-const bgConfig = {
-  fetch: (url, options) => fetch(url, options),
-  globalObj: globalThis,
-  identifier: null, // visitorData (not used)
-  requestKey,
-};
-
-const bgChallenge = await BG.Challenge.create(bgConfig);
-
-if (!bgChallenge)
-  throw new Error('Could not get challenge');
-
-const interpreterJavascript = bgChallenge.interpreterJavascript.privateDoNotAccessOrElseSafeScriptWrappedValue;
-
-if (interpreterJavascript) {
-  new Function(interpreterJavascript)();
-} else throw new Error('Could not load VM');
-
-/// END PoToken init
-
 async function getPoToken(visitorData) {
   if (visitorData === undefined) {
     let innertube = await Innertube.create({retrieve_player: false});
     visitorData = innertube.session.context.client.visitorData;
   }
+
+  const requestKey = 'O43z0dpjhgX20SCx4KAo';
+
+  const dom = new JSDOM();
+
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document
+  });
+
+  const bgConfig = {
+    fetch: (url, options) => fetch(url, options),
+    globalObj: globalThis,
+    identifier: visitorData,
+    requestKey,
+  };
+
+  const bgChallenge = await BG.Challenge.create(bgConfig);
+
+  if (!bgChallenge)
+    throw new Error('Could not get challenge');
+
+  const interpreterJavascript = bgChallenge.interpreterJavascript.privateDoNotAccessOrElseSafeScriptWrappedValue;
+
+  if (interpreterJavascript) {
+    new Function(interpreterJavascript)();
+  } else throw new Error('Could not load VM');
 
   const poTokenResult = await BG.PoToken.generate({
     program: bgChallenge.program,
