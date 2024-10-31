@@ -2,7 +2,7 @@ import { JSDOM } from 'jsdom';
 import { Innertube } from 'youtubei.js';
 import { BG } from '../../dist/index.js';
 import express from 'express';
-//import rateLimit from 'express-rate-limit';
+import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 
 // BEGIN PoToken
@@ -64,44 +64,33 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
-// const generalLimiter = rateLimit({
-//   windowMs: 1 * 1_000, // 5 seconds
-//   max: 2, // 1 request per windowMs
-//   keyGenerator: () => 'global', // Apply limit across all IPs
-//   message: { error: 'Too many requests, please try again later.' },
-//   standardHeaders: false, // Include rate limit info in the headers
-//   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-// });
+const generalLimiter = rateLimit({
+  windowMs: 1 * 1_000, // 5 seconds
+  max: 2, // 1 request per windowMs
+  keyGenerator: () => 'global', // Apply limit across all IPs
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: false, // Include rate limit info in the headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 app.use(compression({
   threshold: 0, // Compress responses of any size
 }));
 
 // Apply the rate limiter to all routes
-//app.use(generalLimiter);
+app.use(generalLimiter);
 
 // Middleware to parse JSON requests
 app.use(express.json());
 
-let callCount = 0;
-const limit = 1;
-
 // Sample RESTful route
 app.get('/', async (req, res) => {
-  if (callCount >= limit) {
-    res.status(429).send('Limit reached. Please try again later.');
-    return;
-  }
-  
   try {
-    callCount++;
     const result = await getPoToken(req.query.visitorData);
     res.json(result);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
-  } finally {
-    callCount--;
   }
 });
 
