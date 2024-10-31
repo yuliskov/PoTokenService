@@ -72,8 +72,8 @@ function reportMemoryUsage() {
 function isMemoryLimitExpired() {
   const memoryUsage = process.memoryUsage();
 
-  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.9) {
-    console.warn(`Memory usage above 90%`);
+  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.95) {
+    console.warn(`Memory usage above 95%`);
     console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
     return true;
   }
