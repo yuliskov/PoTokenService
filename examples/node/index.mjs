@@ -3,7 +3,7 @@ import { Innertube } from 'youtubei.js';
 import { BG } from '../../dist/index.js';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import compression from 'compression';
+//import compression from 'compression';
 
 // BEGIN PoToken
 
@@ -60,27 +60,6 @@ async function getPoToken(visitorData) {
 
 /// BEGIN server
 
-function reportMemoryUsage() {
-  const memoryUsage = process.memoryUsage();
-
-  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.9) {
-    console.warn(`Memory usage is above 90%`);
-    console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
-  }
-}
-
-function isMemoryLimitExpired() {
-  const memoryUsage = process.memoryUsage();
-
-  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.95) {
-    console.warn(`Memory usage above 95%`);
-    console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
-    return true;
-  }
-  
-  return false;
-}
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -89,14 +68,18 @@ const generalLimiter = rateLimit({
   windowMs: 1 * 1_000, // 5 seconds
   max: 1, // 1 request per windowMs
   keyGenerator: () => 'global', // Apply limit across all IPs
-  message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: false, // Include rate limit info in the headers
+  handler: (req, res) => {
+    // Destroy the socket when the limit is exceeded
+    res.socket.destroy();
+  },
+  //message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true, // Include rate limit info in the headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
-app.use(compression({
-  threshold: 0, // Compress responses of any size
-}));
+// app.use(compression({
+//   threshold: 0, // Compress responses of any size
+// }));
 
 // Apply the rate limiter to all routes
 app.use(generalLimiter);
@@ -106,10 +89,6 @@ app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
-  // if (isMemoryLimitExpired()) {
-  //   return res.status(429).send('Memory limit expired');
-  // }
-  
   try {
     const result = await getPoToken(req.query.visitorData);
     res.json(result);

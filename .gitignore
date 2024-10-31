@@ -78,3 +78,5 @@ deno/
 
 # MacOS
 .DS_Store
+
+notes.txt
