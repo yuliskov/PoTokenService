@@ -60,6 +60,16 @@ async function getPoToken(visitorData) {
 
 /// BEGIN server
 
+function reportMemoryUsage() {
+  const memoryUsage = process.memoryUsage();
+  console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
+
+  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.8) {
+    console.warn('Memory usage is above 80%');
+    // You could trigger a cleanup or alert here
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -104,15 +114,5 @@ app.get('/health-check', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-function reportMemoryUsage() {
-  const memoryUsage = process.memoryUsage();
-  console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
-
-  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.8) {
-    console.warn('Memory usage is above 80%');
-    // You could trigger a cleanup or alert here
-  }
-}
 
 /// END server
