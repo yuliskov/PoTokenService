@@ -64,9 +64,8 @@ function reportMemoryUsage() {
   const memoryUsage = process.memoryUsage();
   //console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
 
-  let usage = memoryUsage.heapUsed / memoryUsage.heapTotal;
-  if (usage > 0.95) {
-    console.warn(`Memory usage is above 80%`);
+  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.95) {
+    console.warn('Memory usage is above 95%');
     // You could trigger a cleanup or alert here
   }
 }
