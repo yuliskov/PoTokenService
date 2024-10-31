@@ -69,6 +69,18 @@ function reportMemoryUsage() {
   }
 }
 
+function isMemoryLimitExpired() {
+  const memoryUsage = process.memoryUsage();
+
+  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.9) {
+    console.warn(`Memory usage above 90%`);
+    console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
+    return true;
+  }
+  
+  return false;
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -94,7 +106,9 @@ app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
-  reportMemoryUsage()
+  if (isMemoryLimitExpired()) {
+    return res.status(429).send('Memory limit expired');
+  }
   
   try {
     const result = await getPoToken(req.query.visitorData);
