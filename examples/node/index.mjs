@@ -85,6 +85,8 @@ app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
+  reportMemoryUsage()
+  
   try {
     const result = await getPoToken(req.query.visitorData);
     res.json(result);
@@ -102,5 +104,15 @@ app.get('/health-check', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+function reportMemoryUsage() {
+  const memoryUsage = process.memoryUsage();
+  console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
+
+  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.8) {
+    console.warn('Memory usage is above 80%');
+    // You could trigger a cleanup or alert here
+  }
+}
 
 /// END server
