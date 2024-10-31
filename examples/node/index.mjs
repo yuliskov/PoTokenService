@@ -87,7 +87,7 @@ const PORT = process.env.PORT || 3000;
 // Apply a general rate limit to all requests (1 request per 5 seconds)
 const generalLimiter = rateLimit({
   windowMs: 1 * 1_000, // 5 seconds
-  max: 2, // 1 request per windowMs
+  max: 1, // 1 request per windowMs
   keyGenerator: () => 'global', // Apply limit across all IPs
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: false, // Include rate limit info in the headers
@@ -106,9 +106,9 @@ app.use(express.json());
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
-  if (isMemoryLimitExpired()) {
-    return res.status(429).send('Memory limit expired');
-  }
+  // if (isMemoryLimitExpired()) {
+  //   return res.status(429).send('Memory limit expired');
+  // }
   
   try {
     const result = await getPoToken(req.query.visitorData);
