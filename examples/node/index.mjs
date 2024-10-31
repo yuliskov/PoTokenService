@@ -63,8 +63,8 @@ async function getPoToken(visitorData) {
 function reportMemoryUsage() {
   const memoryUsage = process.memoryUsage();
 
-  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.95) {
-    console.warn(`Memory usage is above 95%`);
+  if (memoryUsage.heapUsed / memoryUsage.heapTotal > 0.9) {
+    console.warn(`Memory usage is above 90%`);
     console.log(`Memory Usage: ${JSON.stringify(memoryUsage)}`);
   }
 }
