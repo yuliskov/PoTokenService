@@ -84,7 +84,7 @@ app.use(compression({
 app.use(express.json());
 
 let callCount = 0;
-const limit = 10;
+const limit = 5;
 
 // Sample RESTful route
 app.get('/', async (req, res) => {
