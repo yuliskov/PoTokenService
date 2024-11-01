@@ -65,7 +65,7 @@ const PORT = process.env.PORT || 3000;
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
 const generalLimiter = rateLimit({
-  windowMs: 1 * 1_000, // 5 seconds
+  windowMs: 2 * 1_000, // 5 seconds
   max: 1, // 1 request per windowMs
   keyGenerator: () => 'global', // Apply limit across all IPs
   handler: (req, res) => {
