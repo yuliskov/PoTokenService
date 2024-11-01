@@ -82,13 +82,13 @@ const generalLimiter = rateLimit({
 // }));
 
 // Apply the rate limiter to all routes
-app.use('/', generalLimiter);
+//app.use(generalLimiter);
 
 // Middleware to parse JSON requests
 app.use(express.json());
 
 // Sample RESTful route
-app.get('/', async (req, res) => {
+app.get('/', generalLimiter, async (req, res) => {
   try {
     const result = await getPoToken(req.query.visitorData);
     res.json(result);
