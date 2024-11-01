@@ -82,7 +82,7 @@ const generalLimiter = rateLimit({
 // }));
 
 // Apply the rate limiter to all routes
-app.use(generalLimiter);
+app.use('/', generalLimiter);
 
 // Middleware to parse JSON requests
 app.use(express.json());
