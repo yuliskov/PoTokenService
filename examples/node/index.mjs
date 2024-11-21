@@ -3,7 +3,7 @@ import { Innertube } from 'youtubei.js';
 import { BG } from '../../dist/index.js';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-//import compression from 'compression';
+import compression from 'compression';
 
 // BEGIN PoToken
 
@@ -56,6 +56,19 @@ async function getPoToken(visitorData) {
   }
 }
 
+async function getPoTokenAlt(program) {
+  const poTokenResult = await BG.PoToken.generate({
+    program: program,
+    globalName: bgChallenge.globalName,
+    bgConfig
+  });
+
+  return {
+    poToken: poTokenResult.poToken,
+    mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
+  }
+}
+
 /// END PoToken
 
 /// BEGIN server
@@ -77,9 +90,19 @@ const generalLimiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
-// app.use(compression({
-//   threshold: 0, // Compress responses of any size
-// }));
+app.disable('x-powered-by');
+app.disable('etag');
+
+app.use((req, res, next) => {
+  res.setHeader('Connection', 'close'); // Disable Keep-Alive
+  res.removeHeader('Date'); // Remove the Date header
+  //res.removeHeader('Vary'); // Remove the Vary header
+  next();
+});
+
+app.use(compression({
+  threshold: 0, // Compress responses of any size
+}));
 
 // Apply the rate limiter to all routes
 //app.use(generalLimiter);
@@ -91,6 +114,16 @@ app.use(express.json());
 app.get('/', generalLimiter, async (req, res) => {
   try {
     const result = await getPoToken(req.query.visitorData);
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/alt', generalLimiter, async (req, res) => {
+  try {
+    const result = await getPoTokenAlt(req.query.program);
     res.json(result);
   } catch (error) {
     console.error(error);
