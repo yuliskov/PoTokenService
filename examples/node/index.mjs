@@ -35,10 +35,10 @@ if (interpreterJavascript) {
 } else throw new Error('Could not load VM');
 
 async function getPoToken(visitorData) {
-  if (visitorData === undefined) {
-    let innertube = await Innertube.create({retrieve_player: false});
-    visitorData = innertube.session.context.client.visitorData;
-  }
+  // if (visitorData === undefined) {
+  //   let innertube = await Innertube.create({retrieve_player: false});
+  //   visitorData = innertube.session.context.client.visitorData;
+  // }
 
   const poTokenResult = await BG.PoToken.generate({
     program: bgChallenge.program,
