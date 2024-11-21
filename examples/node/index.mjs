@@ -49,7 +49,7 @@ async function getPoToken(visitorData) {
   //const placeholderPoToken = BG.PoToken.generatePlaceholder(visitorData);
 
   return {
-    visitorData,
+    //visitorData, // not used
     //placeholderPoToken, // not used
     poToken: poTokenResult.poToken,
     mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
@@ -73,7 +73,7 @@ const generalLimiter = rateLimit({
     res.socket.destroy();
   },
   //message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: true, // Include rate limit info in the headers
+  standardHeaders: false, // Include rate limit info in the headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
