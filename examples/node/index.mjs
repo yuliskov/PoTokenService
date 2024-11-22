@@ -111,7 +111,7 @@ app.use(compression({
 app.use(express.json());
 
 // Sample RESTful route
-app.get('/', generalLimiter, async (req, res) => {
+app.get(['/', '/alt'], generalLimiter, async (req, res) => {
   try {
     const result = await getPoToken(req.query.visitorData);
     res.json(result);
@@ -121,15 +121,15 @@ app.get('/', generalLimiter, async (req, res) => {
   }
 });
 
-app.get('/alt', generalLimiter, async (req, res) => {
-  try {
-    const result = await getPoTokenAlt(req.query.program);
-    res.json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
+// app.get('/alt', generalLimiter, async (req, res) => {
+//   try {
+//     const result = await getPoTokenAlt(req.query.program);
+//     res.json(result);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 app.get('/health-check', (req, res) => {
   res.status(200).send('OK');
