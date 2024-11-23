@@ -107,10 +107,17 @@ const limit = pLimit(20); // num concurrent requests
 // Middleware for concurrent request limiting
 app.use((req, res, next) => {
   limit(() =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
       res.on('finish', resolve); // Free slot when response finishes
       res.on('close', resolve);  // Free slot when client disconnects
-      next();
+
+      try {
+        next();  // Transfer control to the next middleware
+      } catch (error) {
+        console.error('Error in middleware:', error);
+        req.socket.destroy();  // Разрываем соединение при ошибке
+        reject(error);  // Free slot on error
+      }
     })
   ).catch(() => {
     // Destroy socket on exceeding the limit
