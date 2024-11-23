@@ -102,7 +102,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const limit = pLimit(20); // num concurrent requests
+const limit = pLimit(10); // num concurrent requests
 
 // Middleware for concurrent request limiting
 app.use((req, res, next) => {
