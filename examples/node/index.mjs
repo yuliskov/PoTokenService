@@ -76,6 +76,7 @@ async function getPoTokenAlt(program) {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const limit = pLimit(10); // num concurrent requests
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
 // const generalLimiter = rateLimit({
@@ -101,8 +102,6 @@ app.use((req, res, next) => {
   //res.removeHeader('Vary'); // Remove the Vary header
   next();
 });
-
-const limit = pLimit(10); // num concurrent requests
 
 // Middleware for concurrent request limiting
 app.use((req, res, next) => {
