@@ -2,8 +2,9 @@ import { JSDOM } from 'jsdom';
 //import { Innertube } from 'youtubei.js';
 import { BG } from '../../dist/index.js';
 import express from 'express';
-import rateLimit from 'express-rate-limit';
+//import rateLimit from 'express-rate-limit';
 import compression from 'compression';
+import pLimit from "p-limit";
 
 // BEGIN PoToken
 
@@ -77,27 +78,44 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
-const generalLimiter = rateLimit({
-  windowMs: 2 * 1_000, // 5 seconds
-  max: 20, // 1 request per windowMs
-  keyGenerator: () => 'global', // Apply limit across all IPs
-  handler: (req, res) => {
-    // Destroy the socket when the limit is exceeded
-    res.socket.destroy();
-  },
-  //message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: false, // Include rate limit info in the headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
+// const generalLimiter = rateLimit({
+//   windowMs: 2 * 1_000, // 5 seconds
+//   max: 20, // 1 request per windowMs
+//   keyGenerator: () => 'global', // Apply limit across all IPs
+//   handler: (req, res) => {
+//     // Destroy the socket when the limit is exceeded
+//     res.socket.destroy();
+//   },
+//   //message: { error: 'Too many requests, please try again later.' },
+//   standardHeaders: false, // Include rate limit info in the headers
+//   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+// });
 
 app.disable('x-powered-by');
 app.disable('etag');
 
+// Middleware to set headers for every response
 app.use((req, res, next) => {
   res.setHeader('Connection', 'close'); // Disable Keep-Alive
   res.removeHeader('Date'); // Remove the Date header
   //res.removeHeader('Vary'); // Remove the Vary header
   next();
+});
+
+const limit = pLimit(20); // num concurrent requests
+
+// Middleware for concurrent request limiting
+app.use((req, res, next) => {
+  limit(() =>
+    new Promise((resolve) => {
+      res.on('finish', resolve); // Free slot when response finishes
+      res.on('close', resolve);  // Handle abrupt client disconnects
+      next();
+    })
+  ).catch(() => {
+    // Destroy socket on exceeding the limit
+    req.socket.destroy();
+  });
 });
 
 app.use(compression({
@@ -110,8 +128,19 @@ app.use(compression({
 // Middleware to parse JSON requests
 app.use(express.json());
 
+// // Sample RESTful route
+// app.get(['/', '/alt'], generalLimiter, async (req, res) => {
+//   try {
+//     const result = await getPoToken(req.query.visitorData);
+//     res.json(result);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
+
 // Sample RESTful route
-app.get(['/', '/alt'], generalLimiter, async (req, res) => {
+app.get(['/', '/alt'], async (req, res) => {
   try {
     const result = await getPoToken(req.query.visitorData);
     res.json(result);

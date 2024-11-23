@@ -1,5 +1,5 @@
 import { JSDOM } from 'jsdom';
-import { Innertube } from 'youtubei.js';
+//import { Innertube } from 'youtubei.js';
 import { BG } from '../../dist/index.js';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
@@ -35,10 +35,10 @@ if (interpreterJavascript) {
 } else throw new Error('Could not load VM');
 
 async function getPoToken(visitorData) {
-  if (visitorData === undefined) {
-    let innertube = await Innertube.create({retrieve_player: false});
-    visitorData = innertube.session.context.client.visitorData;
-  }
+  // if (visitorData === undefined) {
+  //   let innertube = await Innertube.create({retrieve_player: false});
+  //   visitorData = innertube.session.context.client.visitorData;
+  // }
 
   const poTokenResult = await BG.PoToken.generate({
     program: bgChallenge.program,
@@ -49,8 +49,21 @@ async function getPoToken(visitorData) {
   //const placeholderPoToken = BG.PoToken.generatePlaceholder(visitorData);
 
   return {
-    visitorData,
+    //visitorData, // not used
     //placeholderPoToken, // not used
+    poToken: poTokenResult.poToken,
+    mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
+  }
+}
+
+async function getPoTokenAlt(program) {
+  const poTokenResult = await BG.PoToken.generate({
+    program: program,
+    globalName: bgChallenge.globalName,
+    bgConfig
+  });
+
+  return {
     poToken: poTokenResult.poToken,
     mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
   }
@@ -65,12 +78,26 @@ const PORT = process.env.PORT || 3000;
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
 const generalLimiter = rateLimit({
-  windowMs: 1 * 1_000, // 5 seconds
-  max: 2, // 1 request per windowMs
+  windowMs: 2 * 1_000, // 5 seconds
+  max: 20, // 1 request per windowMs
   keyGenerator: () => 'global', // Apply limit across all IPs
-  message: { error: 'Too many requests, please try again later.' },
+  handler: (req, res) => {
+    // Destroy the socket when the limit is exceeded
+    res.socket.destroy();
+  },
+  //message: { error: 'Too many requests, please try again later.' },
   standardHeaders: false, // Include rate limit info in the headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+app.disable('x-powered-by');
+app.disable('etag');
+
+app.use((req, res, next) => {
+  res.setHeader('Connection', 'close'); // Disable Keep-Alive
+  res.removeHeader('Date'); // Remove the Date header
+  //res.removeHeader('Vary'); // Remove the Vary header
+  next();
 });
 
 app.use(compression({
@@ -78,13 +105,13 @@ app.use(compression({
 }));
 
 // Apply the rate limiter to all routes
-app.use(generalLimiter);
+//app.use(generalLimiter);
 
 // Middleware to parse JSON requests
 app.use(express.json());
 
 // Sample RESTful route
-app.get('/', async (req, res) => {
+app.get(['/', '/alt'], generalLimiter, async (req, res) => {
   try {
     const result = await getPoToken(req.query.visitorData);
     res.json(result);
@@ -93,6 +120,16 @@ app.get('/', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// app.get('/alt', generalLimiter, async (req, res) => {
+//   try {
+//     const result = await getPoTokenAlt(req.query.program);
+//     res.json(result);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 app.get('/health-check', (req, res) => {
   res.status(200).send('OK');
