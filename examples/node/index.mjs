@@ -109,7 +109,7 @@ app.use((req, res, next) => {
   limit(() =>
     new Promise((resolve) => {
       res.on('finish', resolve); // Free slot when response finishes
-      res.on('close', resolve);  // Handle abrupt client disconnects
+      res.on('close', resolve);  // Free slot when client disconnects
       next();
     })
   ).catch(() => {
