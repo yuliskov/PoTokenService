@@ -4,7 +4,7 @@ import { BG } from '../../dist/index.js';
 import express from 'express';
 //import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-import pLimit from "p-limit";
+//import pLimit from "p-limit";
 
 // BEGIN PoToken
 
@@ -57,26 +57,13 @@ async function getPoToken(visitorData) {
   }
 }
 
-async function getPoTokenAlt(program) {
-  const poTokenResult = await BG.PoToken.generate({
-    program: program,
-    globalName: bgChallenge.globalName,
-    bgConfig
-  });
-
-  return {
-    poToken: poTokenResult.poToken,
-    mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
-  }
-}
-
 /// END PoToken
 
 /// BEGIN server
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const limit = pLimit(20); // num concurrent requests
+//const limit = pLimit(20); // num concurrent requests
 
 // // Apply a general rate limit to all requests (1 request per 5 seconds)
 // const generalLimiter = rateLimit({
@@ -103,26 +90,26 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware for concurrent request limiting
-app.use((req, res, next) => {
-  limit(() =>
-    new Promise((resolve, reject) => {
-      res.on('finish', resolve); // Free slot when response finishes
-      res.on('close', resolve);  // Free slot when client disconnects
-
-      try {
-        next();  // Transfer control to the next middleware
-      } catch (error) {
-        console.error('Error in middleware:', error);
-        req.socket.destroy();  // Разрываем соединение при ошибке
-        reject(error);  // Free slot on error
-      }
-    })
-  ).catch(() => {
-    // Destroy socket on exceeding the limit
-    req.socket.destroy();
-  });
-});
+// // Middleware for concurrent request limiting
+// app.use((req, res, next) => {
+//   limit(() =>
+//     new Promise((resolve, reject) => {
+//       res.on('finish', resolve); // Free slot when response finishes
+//       res.on('close', resolve);  // Free slot when client disconnects
+//
+//       try {
+//         next();  // Transfer control to the next middleware
+//       } catch (error) {
+//         console.error('Error in middleware:', error);
+//         req.socket.destroy();  // Разрываем соединение при ошибке
+//         reject(error);  // Free slot on error
+//       }
+//     })
+//   ).catch(() => {
+//     // Destroy socket on exceeding the limit
+//     req.socket.destroy();
+//   });
+// });
 
 app.use(compression({
   threshold: 0, // Compress responses of any size
