@@ -63,7 +63,7 @@ async function getPoToken(visitorData) {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const limit = pLimit(10); // num concurrent requests
+const limit = pLimit(5); // num concurrent requests
 
 // // Apply a general rate limit to all requests (1 request per 5 seconds)
 // const generalLimiter = rateLimit({
