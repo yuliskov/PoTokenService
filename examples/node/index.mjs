@@ -121,17 +121,6 @@ app.use(compression({
 // Middleware to parse JSON requests
 app.use(express.json());
 
-// // Sample RESTful route
-// app.get(['/', '/alt'], generalLimiter, async (req, res) => {
-//   try {
-//     const result = await getPoToken(req.query.visitorData);
-//     res.json(result);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: error.message });
-//   }
-// });
-
 // Sample RESTful route
 app.get(['/', '/alt'], async (req, res) => {
   try {
