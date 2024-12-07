@@ -90,7 +90,7 @@ app.use((req, res, next) => {
 });
 
 // Middleware for concurrent request limiting
-const limit = pLimit(20); // num concurrent requests
+const limit = pLimit(30); // num concurrent requests
 app.use((req, res, next) => {
   limit(() =>
     new Promise((resolve, reject) => {
