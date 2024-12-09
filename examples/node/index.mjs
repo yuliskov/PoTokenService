@@ -2,9 +2,9 @@ import { JSDOM } from 'jsdom';
 //import { Innertube } from 'youtubei.js';
 import { BG } from '../../dist/index.js';
 import express from 'express';
-// import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-import pLimit from "p-limit";
+import rateLimit from 'express-rate-limit';
+// import pLimit from "p-limit";
 
 // BEGIN PoToken
 
@@ -64,19 +64,19 @@ async function getPoToken(visitorData) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// // Apply a general rate limit to all requests (1 request per 5 seconds)
-// const generalLimiter = rateLimit({
-//   windowMs: 2 * 1_000, // 5 seconds
-//   max: 20, // 1 request per windowMs
-//   keyGenerator: () => 'global', // Apply limit across all IPs
-//   handler: (req, res) => {
-//     // Destroy the socket when the limit is exceeded
-//     res.socket.destroy();
-//   },
-//   //message: { error: 'Too many requests, please try again later.' },
-//   standardHeaders: false, // Include rate limit info in the headers
-//   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-// });
+// Apply a general rate limit to all requests (1 request per 5 seconds)
+const generalLimiter = rateLimit({
+  windowMs: 2 * 1_000, // 5 seconds
+  max: 20, // 1 request per windowMs
+  keyGenerator: () => 'global', // Apply limit across all IPs
+  handler: (req, res) => {
+    // Destroy the socket when the limit is exceeded
+    res.socket.destroy();
+  },
+  //message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: false, // Include rate limit info in the headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 app.disable('x-powered-by');
 app.disable('etag');
@@ -89,34 +89,34 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware for concurrent request limiting
-const limit = pLimit(15); // num concurrent requests
-app.use((req, res, next) => {
-  limit(() =>
-    new Promise((resolve, reject) => {
-      res.on('finish', resolve); // Free slot when response finishes
-      res.on('close', resolve);  // Free slot when client disconnects
-
-      try {
-        next();  // Transfer control to the next middleware
-      } catch (error) {
-        console.error('Error in middleware:', error);
-        req.socket.destroy();  // Разрываем соединение при ошибке
-        reject(error);  // Free slot on error
-      }
-    })
-  ).catch(() => {
-    // Destroy socket on exceeding the limit
-    req.socket.destroy();
-  });
-});
+// // Middleware for concurrent request limiting
+// const limit = pLimit(20); // num concurrent requests
+// app.use((req, res, next) => {
+//   limit(() =>
+//     new Promise((resolve, reject) => {
+//       res.on('finish', resolve); // Free slot when response finishes
+//       res.on('close', resolve);  // Free slot when client disconnects
+//
+//       try {
+//         next();  // Transfer control to the next middleware
+//       } catch (error) {
+//         console.error('Error in middleware:', error);
+//         req.socket.destroy();  // Разрываем соединение при ошибке
+//         reject(error);  // Free slot on error
+//       }
+//     })
+//   ).catch(() => {
+//     // Destroy socket on exceeding the limit
+//     req.socket.destroy();
+//   });
+// });
 
 app.use(compression({
   threshold: 0, // Compress responses of any size
 }));
 
-// // Apply the rate limiter to all routes
-// app.use(generalLimiter);
+// Apply the rate limiter to all routes
+app.use(generalLimiter);
 
 // Middleware to parse JSON requests
 app.use(express.json());
