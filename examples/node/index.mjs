@@ -113,9 +113,10 @@ app.use((req, res, next) => {
 // // Apply the rate limiter to all routes
 // app.use(generalLimiter);
 
-// app.use(compression({
-//   threshold: 0, // Compress responses of any size
-// }));
+// Compress responses of any size
+app.use(compression({
+  threshold: 0,
+}));
 
 // Middleware to parse JSON requests
 app.use(express.json());
