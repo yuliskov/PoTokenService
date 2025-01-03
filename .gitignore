@@ -73,7 +73,6 @@ deno/
 
 # MOD: use generated js
 src/
-package-lock.json
 tsconfig.json
 eslint.config.js
 *.bak
