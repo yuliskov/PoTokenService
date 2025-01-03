@@ -75,6 +75,7 @@ deno/
 src/
 package-lock.json
 tsconfig.json
+eslint.config.js
 *.bak
 
 # VSCode files
