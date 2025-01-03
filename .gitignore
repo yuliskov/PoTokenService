@@ -74,6 +74,7 @@ deno/
 # MOD: use generated js
 src/
 package-lock.json
+tsconfig.json
 *.bak
 
 # VSCode files
