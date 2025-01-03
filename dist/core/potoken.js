@@ -1,3 +1,4 @@
+import {base64ToU8, BASE_URL, BGError, GOOG_API_KEY, u8ToBase64, USER_AGENT} from '../utils/index.js';
 import zlib from "zlib"; // MOD: compression
 
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -9,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import {base64ToU8, BASE_URL, BGError, GOOG_API_KEY, u8ToBase64, USER_AGENT} from '../utils/index.js';
 
 /**
  * Generates a Proof of Origin Token.
