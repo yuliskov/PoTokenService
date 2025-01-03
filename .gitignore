@@ -63,12 +63,17 @@ pnpm-lock.yaml
 tmp/
 
 # Build output
-dist/
+# MOD: use generated js
+#dist/
 bundle/*.js.*
 bundle/*.js
 bundle/*.cjs
 bundle/*.cjs.*
 deno/
+
+# MOD: use generated js
+src/
+package-lock.json
 
 # VSCode files
 .vscode/
