@@ -64,7 +64,7 @@ tmp/
 
 # Build output
 # MOD: use generated js
-#dist/
+dist/
 bundle/*.js.*
 bundle/*.js
 bundle/*.cjs
@@ -72,9 +72,10 @@ bundle/*.cjs.*
 deno/
 
 # MOD: use generated js
-src/
-tsconfig.json
-eslint.config.js
+# src/
+# tsconfig.json
+# eslint.config.js
+
 *.bak
 
 # VSCode files
