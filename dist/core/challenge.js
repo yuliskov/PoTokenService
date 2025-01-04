@@ -1,3 +1,6 @@
+import { BGError, base64ToU8, BASE_URL, GOOG_API_KEY, USER_AGENT } from '../utils/index.js';
+import zlib from "zlib";
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -7,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { BGError, base64ToU8, BASE_URL, GOOG_API_KEY, USER_AGENT } from '../utils/index.js';
+
 /**
  * Creates a challenge.
  * @param bgConfig - The config.
@@ -28,12 +31,15 @@ export function create(bgConfig, interpreterHash) {
         const response = yield bgConfig.fetch(new URL('/$rpc/google.internal.waa.v1.Waa/Create', BASE_URL), {
             method: 'POST',
             headers: {
+                'Accept-Encoding': 'gzip, deflate, br', // MOD: incoming compression
+                'Content-Encoding': 'gzip', // MOD: outgoing compression
                 'Content-Type': 'application/json+protobuf',
                 'User-Agent': USER_AGENT,
                 'X-Goog-Api-Key': GOOG_API_KEY,
                 'X-User-Agent': 'grpc-web-javascript/0.1'
             },
-            body: JSON.stringify(payload)
+            //body: JSON.stringify(payload)
+            body: zlib.gzipSync(JSON.stringify(payload)) // MOD: compress body
         });
         if (!response.ok)
             throw new BGError(2, `[Challenge]: Failed to fetch challenge: ${response.status}`);
