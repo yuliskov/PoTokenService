@@ -71,11 +71,6 @@ bundle/*.cjs
 bundle/*.cjs.*
 deno/
 
-# MOD: use generated js
-src/
-tsconfig.json
-eslint.config.js
-
 *.bak
 
 # VSCode files
