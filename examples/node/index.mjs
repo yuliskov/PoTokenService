@@ -99,7 +99,7 @@ app.use((req, res, next) => {
 
 // Apply a general rate limit to all requests (1 request per 5 seconds)
 const generalLimiter = rateLimit({
-  windowMs: 500, // 500 ms
+  windowMs: 1_000, // 500 ms
   max: 1, // 1 request per windowMs
   keyGenerator: () => 'global', // Apply limit across all IPs
   handler: (req, res) => {
