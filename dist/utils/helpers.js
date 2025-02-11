@@ -49,8 +49,8 @@ export function isBrowser() {
 }
 export function getHeaders() {
     const headers = {
-        // 'Accept-Encoding': 'gzip, deflate, br', // MOD: incoming compression
-        // 'Content-Encoding': 'gzip', // MOD: outgoing compression
+        'Accept-Encoding': 'gzip, deflate, br', // MOD: incoming compression
+        'Content-Encoding': 'gzip', // MOD: outgoing compression
         'content-type': 'application/json+protobuf',
         'x-goog-api-key': GOOG_API_KEY,
         'x-user-agent': 'grpc-web-javascript/0.1'

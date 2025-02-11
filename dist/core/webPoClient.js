@@ -16,8 +16,8 @@ export async function generate(args) {
     const integrityTokenResponse = await bgConfig.fetch(buildURL('GenerateIT', bgConfig.useYouTubeAPI), {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify(payload)
-        //body: zlib.gzipSync(JSON.stringify(payload)) // MOD: compress body
+        //body: JSON.stringify(payload)
+        body: zlib.gzipSync(JSON.stringify(payload)) // MOD: compress body
     });
     const integrityTokenJson = await integrityTokenResponse.json();
     const [integrityToken, estimatedTtlSecs, mintRefreshThreshold, websafeFallbackToken] = integrityTokenJson;

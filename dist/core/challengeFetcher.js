@@ -17,8 +17,8 @@ export async function create(bgConfig, interpreterHash) {
     const response = await bgConfig.fetch(buildURL('Create', bgConfig.useYouTubeAPI), {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify(payload)
-        //body: zlib.gzipSync(JSON.stringify(payload)) // MOD: compress body
+        //body: JSON.stringify(payload)
+        body: zlib.gzipSync(JSON.stringify(payload)) // MOD: compress body
     });
     if (!response.ok)
         throw new BGError('[Challenge]: Failed to fetch challenge', { status: response.status });
