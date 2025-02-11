@@ -5,16 +5,20 @@ import type { PoTokenArgs, PoTokenResult } from '../utils/index.js';
  */
 export declare function generate(args: PoTokenArgs): Promise<PoTokenResult>;
 /**
- * Creates a placeholder PoToken. This can be used while `sps` (StreamProtectionStatus) is 2, but will not work once it changes to 3.
+ * Creates a cold start token. This can be used while `sps` (StreamProtectionStatus) is 2, but will not work once it changes to 3.
  * @param identifier - Visitor ID or Data Sync ID.
+ * @param clientState - The client state.
+ */
+export declare function generateColdStartToken(identifier: string, clientState?: number): string;
+/**
+ * @deprecated Use `generateColdStartToken` instead.
  */
 export declare function generatePlaceholder(identifier: string, clientState?: number): string;
 /**
- * Decodes a placeholder potoken string into its components.
- * @param placeholder - The placeholder potoken to decode.
+ * Decodes a cold start webpo token.
  * @throws Error if the packet length is invalid.
  */
-export declare function decodePlaceholder(placeholder: string): {
+export declare function decodeColdStartToken(token: string): {
     identifier: string;
     timestamp: number;
     unknownVal: number;

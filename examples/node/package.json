@@ -12,7 +12,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.1",
-    "jsdom": "^24.1.1",
-    "youtubei.js": "^10.5.0"
+    "googlevideo": "^2.0.0",
+    "jsdom": "^26.0.0",
+    "youtubei.js": "^13.0.0",
+    "canvas": "^3.0.1"
   }
 }

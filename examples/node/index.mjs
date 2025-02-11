@@ -1,59 +1,92 @@
+import { BG, buildURL, GOOG_API_KEY, USER_AGENT } from '../../dist/index.js';
+import { Innertube, YT, YTNodes } from 'youtubei.js';
 import { JSDOM } from 'jsdom';
-//import { Innertube } from 'youtubei.js';
-import { BG } from '../../dist/index.js';
 import express from 'express';
-import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 // import pLimit from "p-limit";
 
 // BEGIN PoToken
 
-const requestKey = 'O43z0dpjhgX20SCx4KAo';
+const userAgent = USER_AGENT;
+// @NOTE: Session cache is disabled so we can get a fresh visitor data string.
+const innertube = await Innertube.create({ user_agent: userAgent, enable_session_cache: false });
+//const visitorData = innertube.session.context.client.visitorData || '';
 
-const dom = new JSDOM();
+// #region BotGuard Initialization
+const dom = new JSDOM('<!DOCTYPE html><html lang="en"><head><title></title></head><body></body></html>', {
+  url: 'https://www.youtube.com/',
+  referrer: 'https://www.youtube.com/',
+  userAgent
+});
 
 Object.assign(globalThis, {
   window: dom.window,
-  document: dom.window.document
+  document: dom.window.document,
+  location: dom.window.location,
+  origin: dom.window.origin
 });
 
-const bgConfig = {
-  fetch: (url, options) => fetch(url, options),
-  globalObj: globalThis,
-  //identifier: visitorData, // not used
-  requestKey,
-};
+if (!Reflect.has(globalThis, 'navigator')) {
+  Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator });
+}
 
-const bgChallenge = await BG.Challenge.create(bgConfig);
+const challengeResponse = await innertube.getAttestationChallenge('ENGAGEMENT_TYPE_UNBOUND');
 
-if (!bgChallenge)
+if (!challengeResponse.bg_challenge)
   throw new Error('Could not get challenge');
 
-const interpreterJavascript = bgChallenge.interpreterJavascript.privateDoNotAccessOrElseSafeScriptWrappedValue;
+const interpreterUrl = challengeResponse.bg_challenge.interpreter_url.private_do_not_access_or_else_trusted_resource_url_wrapped_value;
+const bgScriptResponse = await fetch(`https:${interpreterUrl}`);
+const interpreterJavascript = await bgScriptResponse.text();
 
 if (interpreterJavascript) {
   new Function(interpreterJavascript)();
 } else throw new Error('Could not load VM');
 
+const botguard = await BG.BotGuardClient.create({
+  program: challengeResponse.bg_challenge.program,
+  globalName: challengeResponse.bg_challenge.global_name,
+  globalObj: globalThis
+});
+// #endregion
+
+// #region WebPO Token Generation
+const webPoSignalOutput = [];
+const botguardResponse = await botguard.snapshot({ webPoSignalOutput });
+const requestKey = 'O43z0dpjhgX20SCx4KAo';
+
+const integrityTokenResponse = await fetch(buildURL('GenerateIT', true), {
+  method: 'POST',
+  headers: {
+    'content-type': 'application/json+protobuf',
+    'x-goog-api-key': GOOG_API_KEY,
+    'x-user-agent': 'grpc-web-javascript/0.1',
+    'user-agent': userAgent
+  },
+  body: JSON.stringify([ requestKey, botguardResponse ])
+});
+
+const response = await integrityTokenResponse.json();
+
+if (typeof response[0] !== 'string')
+  throw new Error('Could not get integrity token');
+
+const integrityTokenBasedMinter = await BG.WebPoMinter.create({ integrityToken: response[0] }, webPoSignalOutput);
+// #endregion
+
 async function getPoToken(visitorData) {
-  // if (visitorData === undefined) {
-  //   let innertube = await Innertube.create({retrieve_player: false});
-  //   visitorData = innertube.session.context.client.visitorData;
-  // }
+  if (visitorData === undefined) {
+      visitorData = innertube.session.context.client.visitorData || '';
+  }
 
-  const poTokenResult = await BG.PoToken.generate({
-    program: bgChallenge.program,
-    globalName: bgChallenge.globalName,
-    bgConfig
-  });
-
-  //const placeholderPoToken = BG.PoToken.generatePlaceholder(visitorData);
+  const sessionPoToken = await integrityTokenBasedMinter.mintAsWebsafeString(visitorData);
 
   return {
     //visitorData, // not used
     //placeholderPoToken, // not used
-    poToken: poTokenResult.poToken,
-    mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
+    poToken: sessionPoToken,
+    //mintRefreshDate: new Date((Date.now() + poTokenResult.integrityTokenData.estimatedTtlSecs * 1000) - (poTokenResult.integrityTokenData.mintRefreshThreshold * 1000)),
   }
 }
 
